@@ -1,0 +1,28 @@
+{
+
+
+    "specstory.helpUsImprove": false,
+    "specstory.showDeveloperTools": false,
+    "specstory.autoSave.enabled": true,
+
+  "workbench.colorCustomizations": {
+    //"editor.background": "#001a33",      // Very dark blue for the text editor
+    //"sideBar.background": "#001122",     // Slightly different dark blue for sidebar
+    //"activityBar.background": "#000d1a"  // Darkest blue for the leftmost bar
+
+    "titleBar.activeBackground": "#CC5500",
+    "titleBar.activeForeground": "#ffffff",
+    "titleBar.inactiveBackground": "#A04000",
+    "titleBar.inactiveForeground": "#cccccc",
+
+    "statusBar.background": "#CC5500",
+    "statusBar.foreground": "#ffffff",
+
+    "activityBar.background": "#A04000",
+    "activityBar.foreground": "#ffffff"
+   },
+
+  "specstory.coordinatedUniversalTimezone": false,
+  "specstory.cloudSync.enabled": "never"
+}
+

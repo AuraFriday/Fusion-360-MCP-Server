@@ -1,0 +1,52 @@
+SPDX-License-Identifier: Proprietary
+
+Copyright © 2025 Aura Friday. All Rights Reserved.
+
+`================================================================================`
+
+**PROPRIETARY SOURCE CODE LICENSE**
+
+`================================================================================`
+
+This software and its source code ("Source Code"), contained in this repository, are the exclusive intellectual property of Aura Friday, an Australian proprietary limited company.
+
+By accessing this repository or any of its contents, you accept and agree to be bound by the following terms and conditions:
+
+**1. Limited Right to View**
+A limited, non-exclusive, non-transferable right is granted to all persons to view the Source Code contained herein for reference, audit, and educational purposes only.
+
+**2. Limited Right to Contribute**
+A limited right is granted to create a temporary, local copy of the Source Code for the **sole and exclusive purpose** of preparing a code contribution (a "Patch"). This right is contingent upon the following conditions:-
+  - a. You must follow the exact procedures outlined in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+  - b. Your contribution is governed by the terms of the [CONTRIBUTOR_LICENSE_AGREEMENT.md](CONTRIBUTOR_LICENSE_AGREEMENT.md) (CLA), which includes the assignment of all intellectual property rights in your contribution to Aura Friday.
+  - c. This right does not grant you permission to compile, execute, run, distribute, or use the Source Code for any other purpose whatsoever.
+
+**3. Prohibited Actions**
+Except for the limited rights explicitly granted in Sections 1 and 2 above, all other rights are reserved. You are **STRICTLY PROHIBITED** from performing any of the following actions:-
+  - a.  **Copying, modifying, distributing, or merging** the Source Code for any purpose other than preparing a Patch as described in Section 2.
+  - b.  **Forking** this repository.
+  - c.  **Creating derivative works** from the Source Code.
+  - d.  **Publishing, sublicensing, or selling** the Source Code.
+  - e.  **Incorporating** the Source Code into any other software project.
+
+This is **NOT an open source license**. The availability of the Source Code in a public repository does NOT grant you any rights beyond those explicitly stated in this Agreement. No other license is granted under any of Aura Friday's intellectual property rights, either expressly or by implication, estoppel, or otherwise.
+
+Any unauthorized use, reproduction, or distribution of this Source Code is a direct violation of international copyright law and will be subject to legal action, including but not limited to DMCA takedown notices and civil proceedings.
+
+---
+
+**Regarding Software Use:**
+The use of the compiled, executable software derived from this Source Code (such as the server components, browser extension, or mobile applications) is governed by a separate **End-User License Agreement (EULA.md)**.
+
+**Regarding Contributions:**
+All contributions to this project are governed by a **Contributor License Agreement (CONTRIBUTING.md)**.
+
+**Regarding Store Content:**
+All content submitted to the mcp-link Store is governed by an **Exclusive Content License Agreement (STORE.md)**.
+
+---
+
+For all licensing inquiries, please contact:
+data-protection@aurafriday.com
+
+<small><sup>Copyright © 2025 Christopher Drake. All rights reserved. "signature": "ʋ8ƋӠʈdgīꓣᴛⲦďΑ𐐕һȣⲞⅠ𝟢τhуꓪl৭Ο𝟚𝟣ѵďEBВȠYʌGCƖуӠGßhυυВrКⴹīΒꙅᎻ𝟫ȷƊƼցCuZᴅ𝟚хnꓰᖴᎻƻᏂⲟ𝟥ƋmОꙅВᗷiƤbꜱpmģАV0ցƎƖAPÞЈⅼCꓗսBҮVꓑÐᏴ𝟥ɯꓟ". "signdate":"2025-10-30T02:41:34.864Z" </sup></small>

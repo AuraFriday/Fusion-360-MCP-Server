@@ -135,7 +135,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+# .env fusion360 needs this - it does NOT have confidential info in it!
 .envrc
 .venv
 env/
@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+.history/
+old/
+build/
+install/
