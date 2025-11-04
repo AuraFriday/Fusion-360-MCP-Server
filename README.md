@@ -2,7 +2,7 @@
 
 **Control Fusion 360 with any AI through Model Context Protocol (MCP)**
 
-[![Watch Demo](https://img.youtube.com/vi/Hpu5dopidKc/maxresdefault.jpg)](https://www.youtube.com/watch?v=Hpu5dopidKc)
+[![Watch Demo](https://img.youtube.com/vi/0T2XU4tzudQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=0T2XU4tzudQ)
 
 *Click above to watch AI create "Fusion Rocks!" in 3D*
 
