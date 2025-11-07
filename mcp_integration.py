@@ -42,8 +42,8 @@ def _create_mcp_client():
     Configured MCPClient instance ready to connect
   """
   tool_name = "fusion360"
-  tool_description = "Autodesk Fusion 360 - AI-powered CAD/CAM/CAE software for product design and manufacturing"
-  tool_readme = """
+  tool_readme = "Autodesk Fusion 360 - Use this to perform CAD/CAM/CAE/ECAD and 3D-Printing/Milling"
+  tool_description = """
 Fusion 360 MCP Tool - UNLIMITED API Access + Python Execution + MCP Integration
 
 ⚠️ MAXIMUM ACCESS MODE ⚠️
