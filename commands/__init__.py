@@ -4,17 +4,12 @@
 # NOTE: The MCP integration is NOT a command - it's core infrastructure
 # that auto-starts in MCP-Link.py. Only add actual UI commands here.
 
-# Sample commands (for reference - can be removed if not needed)
-from .samples.commandDialog import sample_dialog_command as commandDialog
-from .samples.paletteShow import sample_palette_show as paletteShow
-from .samples.paletteSend import sample_palette_send as paletteSend
+# MCP About command - shows information about the add-in
+from .mcpAbout import mcp_about_command as mcpAbout
 
-# Active commands list - add your custom commands here
-# NOTE: Sample commands are included but you can remove them if not needed
+# Active commands list
 commands = [
-    commandDialog,
-    paletteShow,
-    paletteSend
+    mcpAbout
 ]
 
 

@@ -22,7 +22,10 @@ MCP_AUTO_CONNECT = True
 # This is used when defining unique internal names for various UI elements 
 # that need a unique name. It's also recommended to use a company name as 
 # part of the ID to better ensure the ID is unique.
-ADDIN_NAME = os.path.basename(os.path.dirname(__file__))
+# 
+# IMPORTANT: Use a fixed name instead of folder name to avoid conflicts
+# when the folder name changes (e.g., different versions)
+ADDIN_NAME = 'MCPLinkFusion'
 COMPANY_NAME = 'AuraFriday'
 
 # Palettes

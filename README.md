@@ -413,7 +413,7 @@ See [`AUTODESK_DEMO_AIRFOILTOOLS.md`](AUTODESK_DEMO_AIRFOILTOOLS.md) for the com
 
 ## 📄 License
 
-MIT License - See LICENSE file for details
+Proprietary - See LICENSE file for details
 
 ---
 
