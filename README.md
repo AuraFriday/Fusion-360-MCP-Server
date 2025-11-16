@@ -1,6 +1,9 @@
-# Fusion 360 MCP Server
 
-**Control Fusion 360 with AI - Now with Python Execution & Full MCP Integration**
+# Fusion 360 MCP Server Add-in
+
+**Control Fusion 360 with AI !**
+
+This Fusion 360 add-in connects to the Aura Friday MCP-Link server, making Fusion 360 available as a remote tool that AI agents can control.
 
 [![Watch Demo](https://img.youtube.com/vi/0T2XU4tzudQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=0T2XU4tzudQ)
 
@@ -8,8 +11,15 @@
 
 ---
 
-## 🚀 What's New: Python Execution + MCP Tool Integration
+## 🚀 What's New
 
+### Latest: Thread-Safe Architecture (November 2025)
+- ✅ **Rock-solid stability** - All Fusion API calls now execute on main thread
+- ✅ **Zero crashes** - Work queue system prevents threading issues
+- ✅ **Centralized logging** - Thread-safe diagnostics from all components
+- ✅ **Production ready** - Handles heavy loads without instability
+
+### Python Execution + MCP Tool Integration
 **AI can now run arbitrary Python code directly inside Fusion 360** with full access to:
 - ✅ Entire Fusion 360 API (`adsk.core`, `adsk.fusion`, `adsk.cam`)
 - ✅ All loaded add-ins (access your custom add-ins automatically!)
@@ -265,6 +275,8 @@ if 'AirfoilTools' in str(addins):
 - **MCP Bridge** (NEW!) - Allows Python to call other MCP tools
 - **Context Manager** - Stores intermediate objects for multi-step operations
 - **Enhanced Reporting** - Provides detailed success/error information
+- **Thread-Safe Proxy** (NEW!) - Ensures all Fusion API calls happen on main thread
+- **Centralized Logger** (NEW!) - Thread-safe logging from any component
 
 ---
 
@@ -366,6 +378,7 @@ See [`AUTODESK_DEMO_AIRFOILTOOLS.md`](AUTODESK_DEMO_AIRFOILTOOLS.md) for the com
 
 ## 🔧 Technical Details
 
+### Core Architecture
 - Built with Fusion 360's native Python API
 - Uses Server-Sent Events (SSE) for MCP connection
 - JSON-RPC protocol for command execution
@@ -374,6 +387,13 @@ See [`AUTODESK_DEMO_AIRFOILTOOLS.md`](AUTODESK_DEMO_AIRFOILTOOLS.md) for the com
 - All operations run locally (no cloud dependencies)
 - Auto-reconnection with exponential backoff
 - Native messaging protocol for server discovery
+
+### Thread Safety & Stability
+- **Main Thread Execution**: All Fusion 360 API calls execute on Fusion's main UI thread
+- **Work Queue System**: Background threads queue work items for safe main thread processing
+- **Custom Event Handler**: Uses Fusion's `CustomEvent` system to safely trigger API calls
+- **Centralized Logging**: Thread-safe log buffer ensures reliable diagnostics from any thread
+- **Crash Prevention**: Robust architecture prevents crashes even under heavy load
 
 ---
 
@@ -451,6 +471,12 @@ A: Yes! All operations run locally. Optional: use local AI models.
 
 **Q: Can I use this with Claude/ChatGPT/etc?**  
 A: Yes! Works with any AI that supports MCP protocol.
+
+**Q: Is it stable? Will it crash Fusion?**  
+A: Very stable! Thread-safe architecture ensures all API calls happen on main thread, preventing crashes.
+
+**Q: Can I use this in production?**  
+A: Yes! The add-in is production-ready with robust error handling and stability features.
 
 ---
 

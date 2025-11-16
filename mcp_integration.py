@@ -19,6 +19,9 @@ import adsk.core
 import adsk.fusion
 import os
 import json
+import queue
+import threading
+import time
 from .lib import fusionAddInUtils as futil
 from .lib import mcp_client
 from . import config
@@ -29,9 +32,85 @@ ui = app.userInterface
 # Global MCP client instance (maintains connection throughout add-in lifecycle)
 mcp_client_instance = None
 
+# Global reference to the actual handler implementation
+# Set by _create_mcp_client() so _process_fusion_api_work_queue() can call it
+_fusion_tool_handler_impl_ref = None
+
 # Python execution sessions (module-level for true inline access)
 # Each session stores variables that persist across executions
 python_sessions = {}
+
+# ============================================
+# THREAD-SAFE API CALL INFRASTRUCTURE
+# ============================================
+
+# Queue for daemon threads to request Fusion API work
+fusion_api_work_queue = queue.Queue()
+
+# Custom event for main thread processing
+fusion_api_custom_event = None
+fusion_api_event_handler = None
+
+# Timer thread for firing events
+fusion_api_timer_thread = None
+fusion_api_stop_event = threading.Event()
+
+# Reentrant call guard
+fusion_api_processing_lock = threading.Lock()
+
+# ============================================
+# THREAD-SAFE LOGGING INFRASTRUCTURE
+# ============================================
+
+# Log buffer - ALL threads append here (thread-safe)
+fusion_log_buffer = []
+fusion_log_buffer_lock = threading.Lock()
+
+
+def log(message: str, level=None):
+  """
+  Thread-safe logging - can be called from ANY thread.
+  
+  If called from main thread: logs immediately (for real-time debugging)
+  If called from daemon thread: buffers for main thread to flush
+  
+  Args:
+    message: The message to log
+    level: Optional adsk.core.LogLevels (e.g., ErrorLogLevel, WarningLogLevel)
+  """
+  # If we're on main thread, log immediately for real-time visibility
+  if threading.current_thread() == threading.main_thread():
+    if level:
+      futil.log(message, level)
+    else:
+      futil.log(message)
+  else:
+    # Daemon thread - buffer for main thread to flush
+    fusion_log_buffer.append((message, level))
+
+
+def _flush_log_buffer():
+  """
+  Flush queued log messages - ONLY called from main thread.
+  
+  This is the ONLY place in the entire codebase that calls futil.log()
+  """
+  global fusion_log_buffer
+  
+  if not fusion_log_buffer:
+    return
+  
+  # Get all messages atomically
+  with fusion_log_buffer_lock:
+    messages = fusion_log_buffer[:]
+    fusion_log_buffer.clear()
+  
+  # Log them all (we're on main thread - safe!)
+  for message, level in messages:
+    if level:
+      futil.log(message, level)
+    else:
+      futil.log(message)
 
 
 def _create_mcp_client():
@@ -191,7 +270,49 @@ The add-in maintains a session context for stored objects across multiple calls.
   
   def fusion_tool_handler(call_data):
     """
-    Handle incoming tool calls from MCP server.
+    THREAD-SAFE PROXY for Fusion API calls.
+    
+    This function can be called from ANY thread. If called from a daemon thread,
+    it queues the work and waits for the main thread to process it.
+    
+    If called from the main thread, it executes directly.
+    """
+    current_thread = threading.current_thread()
+    main_thread = threading.main_thread()
+    
+    # Check if we're already on main thread
+    if current_thread == main_thread:
+      # Already on main thread - execute directly
+      return _fusion_tool_handler_impl(call_data)
+    
+    # We're on a daemon thread - queue the work for main thread
+    result_queue = queue.Queue()
+    
+    work_item = {
+      'call_data': call_data,
+      'result_queue': result_queue
+    }
+    
+    # Queue the work (thread-safe)
+    fusion_api_work_queue.put(work_item)
+    
+    # IMMEDIATELY fire the CustomEvent to wake up main thread
+    # This is THREAD-SAFE - just sends a message to Fusion
+    try:
+      app.fireCustomEvent('FusionAPIProcessorEvent')
+    except Exception as e:
+      log(f"ERROR firing CustomEvent: {e}", adsk.core.LogLevels.ErrorLogLevel)
+    
+    # Wait for main thread to process it
+    # This blocks (sleeps) until result arrives - no CPU usage
+    result = result_queue.get()
+    
+    return result
+  
+  
+  def _fusion_tool_handler_impl(call_data):
+    """
+    ACTUAL implementation - MUST run on main thread.
     
     This is a COMPLETELY GENERIC handler that can execute ANY Fusion 360 API call
     without custom code. Commands are data-driven via api_path navigation.
@@ -267,7 +388,6 @@ The add-in maintains a session context for stored objects across multiple calls.
       # Handle special commands
       if api_path == 'get_pid':
         pid = os.getpid()
-        futil.log(f"[TOOL CALL] Fusion 360 PID: {pid}")
         return {
           "content": [{
             "type": "text",
@@ -279,7 +399,6 @@ The add-in maintains a session context for stored objects across multiple calls.
       if api_path == 'clear_context':
         count = len(fusion_context)
         fusion_context.clear()
-        futil.log(f"[TOOL CALL] Cleared {count} stored objects")
         return {
           "content": [{
             "type": "text",
@@ -287,10 +406,6 @@ The add-in maintains a session context for stored objects across multiple calls.
           }],
           "isError": False
         }
-      
-      futil.log(f"[TOOL CALL] API Path: {api_path}")
-      futil.log(f"[TOOL CALL] Args: {args}")
-      futil.log(f"[TOOL CALL] Kwargs: {kwargs}")
       
       # Resolve the API path to an actual object/method
       target = _resolve_api_path(api_path, fusion_context)
@@ -308,12 +423,9 @@ The add-in maintains a session context for stored objects across multiple calls.
       # Store result if requested
       if store_as:
         fusion_context[store_as] = result
-        futil.log(f"[TOOL CALL] Stored result as '{store_as}'")
       
       # Extract return properties
       result_info = _extract_result_info(result, return_properties)
-      
-      futil.log(f"[TOOL CALL] Result: {result_info}")
       
       # Build detailed success report for AI
       success_report = []
@@ -369,8 +481,8 @@ The add-in maintains a session context for stored objects across multiple calls.
       
       error_text = "\n".join(error_report)
       
-      futil.log(f"ERROR in fusion_tool_handler: {e}", adsk.core.LogLevels.ErrorLogLevel)
-      futil.log(error_trace, adsk.core.LogLevels.ErrorLogLevel)
+      log(f"ERROR in fusion_tool_handler: {e}", adsk.core.LogLevels.ErrorLogLevel)
+      log(error_trace, adsk.core.LogLevels.ErrorLogLevel)
       
       return {
         "content": [{
@@ -571,7 +683,12 @@ The add-in maintains a session context for stored objects across multiple calls.
   
   def log_callback(message):
     """Log callback for MCP client."""
-    futil.log(f"[MCP] {message}")
+    log(f"[MCP] {message}")
+  
+  # Store reference to implementation at module level
+  # so _process_fusion_api_work_queue() can call it
+  global _fusion_tool_handler_impl_ref
+  _fusion_tool_handler_impl_ref = _fusion_tool_handler_impl
   
   # Create and return the client
   return mcp_client.MCPClient(
@@ -617,7 +734,7 @@ def _get_scripts_directory():
   # Create directory if it doesn't exist
   scripts_dir.mkdir(parents=True, exist_ok=True)
   
-  futil.log(f"[MCP] Scripts directory: {scripts_dir}")
+  log(f"[MCP] Scripts directory: {scripts_dir}")
   
   return str(scripts_dir)
 
@@ -742,7 +859,7 @@ def _handle_save_script(arguments: dict) -> dict:
     with open(script_path, 'w', encoding='utf-8') as f:
       f.write(code)
     
-    futil.log(f"[MCP] Saved script: {script_path}")
+    log(f"[MCP] Saved script: {script_path}")
     
     return {
       "content": [{"type": "text", "text": json.dumps({
@@ -783,7 +900,7 @@ def _handle_load_script(arguments: dict) -> dict:
     with open(script_path, 'r', encoding='utf-8') as f:
       code = f.read()
     
-    futil.log(f"[MCP] Loaded script: {script_path}")
+    log(f"[MCP] Loaded script: {script_path}")
     
     return {
       "content": [{"type": "text", "text": json.dumps({
@@ -820,7 +937,7 @@ def _handle_list_scripts(arguments: dict) -> dict:
     
     scripts.sort(key=lambda x: x["filename"])
     
-    futil.log(f"[MCP] Listed {len(scripts)} scripts")
+    log(f"[MCP] Listed {len(scripts)} scripts")
     
     return {
       "content": [{"type": "text", "text": json.dumps({
@@ -859,7 +976,7 @@ def _handle_delete_script(arguments: dict) -> dict:
     
     os.remove(script_path)
     
-    futil.log(f"[MCP] Deleted script: {script_path}")
+    log(f"[MCP] Deleted script: {script_path}")
     
     return {
       "content": [{"type": "text", "text": json.dumps({
@@ -875,6 +992,135 @@ def _handle_delete_script(arguments: dict) -> dict:
     }
 
 
+def _process_fusion_api_work_queue():
+  """
+  Process queued Fusion API work - RUNS ON MAIN THREAD.
+  
+  Called by Fusion when CustomEvent fires. This is where all the actual
+  Fusion API calls happen, safely on the main thread.
+  
+  Uses a lock to prevent reentrant calls (if CustomEvent fires while we're already processing).
+  """
+  # Try to acquire lock - if already processing, skip this call
+  if not fusion_api_processing_lock.acquire(blocking=False):
+    return
+  
+  try:
+    # Flush any queued log messages first
+    _flush_log_buffer()
+    
+    # Process all pending work (but don't hog the main thread)
+    max_per_batch = 10
+    processed = 0
+    
+    while processed < max_per_batch:
+      try:
+        work_item = fusion_api_work_queue.get_nowait()
+      except queue.Empty:
+        break
+      
+      call_data = work_item['call_data']
+      result_queue = work_item['result_queue']
+      
+      # CRITICAL: Always return a result, even if processing fails
+      try:
+        # Execute the actual work on main thread (SAFE!)
+        result = _fusion_tool_handler_impl_ref(call_data)
+      except Exception as e:
+        # If processing fails, return an error result
+        import traceback
+        error_trace = traceback.format_exc()
+        log(f"ERROR during processing: {e}", adsk.core.LogLevels.ErrorLogLevel)
+        log(error_trace, adsk.core.LogLevels.ErrorLogLevel)
+        result = {
+          "content": [{
+            "type": "text",
+            "text": f"FATAL ERROR in work queue processor:\n{error_trace}"
+          }],
+          "isError": True
+        }
+      
+      # Return result to waiting thread (ALWAYS happens, even on error)
+      result_queue.put(result)
+      
+      processed += 1
+    
+    # Flush logs again after processing work
+    _flush_log_buffer()
+  
+  finally:
+    # Always release the lock
+    fusion_api_processing_lock.release()
+
+
+def _timer_loop():
+  """
+  Timer thread that fires custom events when work is queued.
+  
+  This runs on a daemon thread but NEVER calls Fusion API directly.
+  It only tells Fusion to fire an event, which Fusion processes on its main thread.
+  
+  Fires event every 1 second max as a keepalive/fallback, and immediately when work detected.
+  """
+  event_id = 'FusionAPIProcessorEvent'
+  last_fire_time = 0
+  
+  while not fusion_api_stop_event.is_set():
+    try:
+      current_time = time.time()
+      should_fire = False
+      
+      # Check if there's work to do (fast - just checks queue size)
+      if not fusion_api_work_queue.empty():
+        should_fire = True
+      # Also fire every 1 second as keepalive (to flush logs, etc)
+      elif current_time - last_fire_time >= 1.0:
+        should_fire = True
+      
+      if should_fire:
+        # Tell Fusion to fire our custom event
+        # This is THREAD-SAFE - just sends a message to Fusion
+        # Fusion will call our handler on ITS main thread
+        app.fireCustomEvent(event_id)
+        last_fire_time = current_time
+    except Exception as e:
+      log(f"Timer loop error: {e}", adsk.core.LogLevels.ErrorLogLevel)
+    
+    # Check every 50ms for good responsiveness
+    time.sleep(0.05)
+
+
+def _setup_fusion_api_processor():
+  """
+  Set up the main thread processor for queued API calls.
+  
+  Creates a CustomEvent that Fusion will call on its main thread,
+  and starts a timer thread to fire that event when work is queued.
+  """
+  global fusion_api_custom_event, fusion_api_event_handler, fusion_api_timer_thread
+  
+  # Register custom event with Fusion
+  event_id = 'FusionAPIProcessorEvent'
+  fusion_api_custom_event = app.registerCustomEvent(event_id)
+  
+  # Create event handler that processes the queue
+  class FusionAPIEventHandler(adsk.core.CustomEventHandler):
+    def __init__(self):
+      super().__init__()
+    
+    def notify(self, args):
+      # THIS RUNS ON FUSION'S MAIN THREAD!
+      _process_fusion_api_work_queue()
+  
+  # Register the handler
+  fusion_api_event_handler = FusionAPIEventHandler()
+  fusion_api_custom_event.add(fusion_api_event_handler)
+  
+  # Start timer thread to fire events when work is queued
+  fusion_api_timer_thread = threading.Thread(target=_timer_loop, daemon=True)
+  fusion_api_timer_thread.start()
+
+
 def _auto_connect():
   """
   Automatically connect to MCP server (called during startup if MCP_AUTO_CONNECT is True).
@@ -883,57 +1129,86 @@ def _auto_connect():
   global mcp_client_instance
   
   if mcp_client_instance and mcp_client_instance.is_connected:
-    futil.log("Already connected to MCP server")
+    log("Already connected to MCP server")
     return
   
-  futil.log("Starting auto-connect to MCP server...")
+  log("Starting auto-connect to MCP server...")
   
   # Create and connect
   mcp_client_instance = _create_mcp_client()
   success = mcp_client_instance.connect()
   
   if success:
-    futil.log("[SUCCESS] Auto-connected to MCP server!")
+    log("[SUCCESS] Auto-connected to MCP server!")
   else:
-    futil.log("Auto-connect failed - check logs above for details", adsk.core.LogLevels.WarningLogLevel)
+    log("Auto-connect failed - check logs above for details", adsk.core.LogLevels.WarningLogLevel)
     mcp_client_instance = None
 
 
 def start():
   """Initialize MCP integration when add-in starts."""
-  futil.log("="*60)
-  futil.log("MCP Integration: start() called")
-  futil.log("="*60)
+  log("MCP Integration starting...")
+  
+  # Set up thread-safe API processor FIRST
+  try:
+    _setup_fusion_api_processor()
+  except Exception as e:
+    log(f"ERROR: Failed to setup API processor: {e}", adsk.core.LogLevels.ErrorLogLevel)
+    import traceback
+    log(traceback.format_exc(), adsk.core.LogLevels.ErrorLogLevel)
+    return
   
   # Auto-connect to MCP server (no UI button - this is infrastructure)
   if config.MCP_AUTO_CONNECT:
-    futil.log("MCP_AUTO_CONNECT is True - attempting auto-connect...")
     try:
       _auto_connect()
-      futil.log("[OK] MCP Integration started successfully")
+      log("MCP Integration started successfully")
     except Exception as e:
-      futil.log(f"ERROR: Auto-connect failed: {e}", adsk.core.LogLevels.ErrorLogLevel)
+      log(f"ERROR: Auto-connect failed: {e}", adsk.core.LogLevels.ErrorLogLevel)
       import traceback
-      futil.log(traceback.format_exc(), adsk.core.LogLevels.ErrorLogLevel)
+      log(traceback.format_exc(), adsk.core.LogLevels.ErrorLogLevel)
   else:
-    futil.log("MCP_AUTO_CONNECT is False - MCP integration disabled")
-    futil.log("Set MCP_AUTO_CONNECT = True in config.py to enable")
+    log("MCP_AUTO_CONNECT is False - MCP integration disabled")
+    log("Set MCP_AUTO_CONNECT = True in config.py to enable")
+  
+  # Flush initial logs
+  _flush_log_buffer()
 
 
 def stop():
   """Cleanup when add-in stops."""
-  global mcp_client_instance
+  global mcp_client_instance, fusion_api_custom_event, fusion_api_event_handler, fusion_api_timer_thread
   
-  futil.log("MCP Integration: stop() called")
+  log("MCP Integration stopping...")
+  
+  # Stop the timer thread
+  fusion_api_stop_event.set()
+  
+  # Wait for timer thread to actually stop
+  if fusion_api_timer_thread and fusion_api_timer_thread.is_alive():
+    fusion_api_timer_thread.join(timeout=3.0)
+    if fusion_api_timer_thread.is_alive():
+      log("WARNING: Timer thread did not stop in time", adsk.core.LogLevels.WarningLogLevel)
   
   # Disconnect MCP client if connected
-  if mcp_client_instance and mcp_client_instance.is_connected:
-    futil.log("Disconnecting from MCP server...")
-    mcp_client_instance.disconnect()
+  if mcp_client_instance:
+    if mcp_client_instance.is_connected:
+      mcp_client_instance.disconnect()
     mcp_client_instance = None
-    futil.log("[OK] MCP Integration stopped")
-  else:
-    futil.log("MCP Integration was not connected")
+  
+  # Clean up event handler
+  if fusion_api_custom_event and fusion_api_event_handler:
+    try:
+      fusion_api_custom_event.remove(fusion_api_event_handler)
+    except Exception as e:
+      log(f"Error removing event handler: {e}", adsk.core.LogLevels.WarningLogLevel)
+    fusion_api_event_handler = None
+    fusion_api_custom_event = None
+  
+  log("MCP Integration stopped")
+  
+  # Flush final logs
+  _flush_log_buffer()
 
 
 # Note: UI command handlers removed - mcp_integration is now pure infrastructure

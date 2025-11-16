@@ -10,7 +10,7 @@ ZIP_NAME := MCP-Link-Fusion-$(VERSION).zip
 
 # Directories to exclude from the zip (as find patterns)
 EXCLUDE_PATTERNS := -path "./.git/*" -o -path "./.github/*" -o -path "./.vscode/*" -o -path "./.specstory/*" \
-	-o -path "./old/*" -o -path "./python_mcp/*" -o -path "./fusion_ai/*" \
+	-o -path "./old/*" -o -path "./python_mcp/*" -o -path "./fusion_ai/*" -o -path "./docs-mine/*" -o -path "./todo.txt" -o -path "./__pycache__/*"  \
 	-o -path "./Fusion-360-MCP-Server/*" -o -path "./ragtag/*"
 
 .PHONY: all clean help package list-files
@@ -110,5 +110,8 @@ help:
 	@echo "Excluded files:"
 	@echo "  Hidden files (.*), Makefile, *.zip"
 	@echo ""
+	@echo "RELEASE:"
+	@echo "cd Fusion-360-MCP-Server"
+	@echo 'for FN in `find . -type f -not -path "./.*/*" -not -path "./.*" -not -path "./old/*" -not -path "./python_mcp/*"  -not -path "./fusion_ai/*"   -not -path "./Fusion-360-MCP-Server/*" `;do if cmp -s $$FN ~/Downloads/cursor/MCP-Link-fusion-new/$$FN; then echo -e "$${GRN}SAME$${NORM}  $$FN"; else echo /bin/cp -a ~/Downloads/cursor/MCP-Link-fusion-new/$$FN $$FN; fi;   done'
 	@echo "=================================================="
 

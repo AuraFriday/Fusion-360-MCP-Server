@@ -9,12 +9,12 @@ from . import config
 
 def run(context):
     try:
-        futil.log("="*60)
-        futil.log("MCP-Link Add-in: run() called")
-        futil.log(f"DEBUG mode: {config.DEBUG}")
-        futil.log(f"MCP_DEBUG mode: {config.MCP_DEBUG}")
-        futil.log(f"MCP_AUTO_CONNECT: {config.MCP_AUTO_CONNECT}")
-        futil.log("="*60)
+        mcp_integration.log("="*60)
+        mcp_integration.log("MCP-Link Add-in: run() called")
+        mcp_integration.log(f"DEBUG mode: {config.DEBUG}")
+        mcp_integration.log(f"MCP_DEBUG mode: {config.MCP_DEBUG}")
+        mcp_integration.log(f"MCP_AUTO_CONNECT: {config.MCP_AUTO_CONNECT}")
+        mcp_integration.log("="*60)
         
         # Start MCP integration (core infrastructure - not a command)
         mcp_integration.start()
@@ -22,7 +22,7 @@ def run(context):
         # Start any UI commands (buttons, palettes, etc.)
         commands.start()
         
-        futil.log("[OK] MCP-Link Add-in started successfully")
+        mcp_integration.log("[OK] MCP-Link Add-in started successfully")
 
     except:
         futil.handle_error('run')
@@ -30,9 +30,9 @@ def run(context):
 
 def stop(context):
     try:
-        futil.log("="*60)
-        futil.log("MCP-Link Add-in: stop() called")
-        futil.log("="*60)
+        mcp_integration.log("="*60)
+        mcp_integration.log("MCP-Link Add-in: stop() called")
+        mcp_integration.log("="*60)
         
         # Stop MCP integration first
         mcp_integration.stop()
@@ -43,7 +43,7 @@ def stop(context):
         # Remove all event handlers
         futil.clear_handlers()
         
-        futil.log("[OK] MCP-Link Add-in stopped")
+        mcp_integration.log("[OK] MCP-Link Add-in stopped")
 
     except:
         futil.handle_error('stop')
