@@ -1,0 +1,13 @@
+{
+	"autodeskProduct":	"Fusion",
+	"type":	"addin",
+	"author":	"Aura Friday",
+	"description":	{
+		"":	"Control Fusion 360 with AI through Model Context Protocol - Full API access for AI agents"
+	},
+	"version":	"1.2.55",
+	"runOnStartup":	true,
+	"supportedOS":	"windows|mac",
+	"editEnabled":	true,
+	"iconFilename":	"Aura_Friday_Logo.svg"
+}
