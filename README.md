@@ -1,9 +1,9 @@
 
-# Fusion 360 MCP Server Add-in
+# Autodesk Fusion MCP Server Add-in
 
-**Control Fusion 360 with AI !**
+**Control Fusion with AI !**
 
-This Fusion 360 add-in connects to the Aura Friday MCP-Link server, making Fusion 360 available as a remote tool that AI agents can control.
+This add-in for Autodesk Fusion connects to the Aura Friday MCP-Link server, making Fusion available as a remote tool that AI agents can control.
 
 [![Watch Demo](https://img.youtube.com/vi/0T2XU4tzudQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=0T2XU4tzudQ)
 
@@ -20,8 +20,8 @@ This Fusion 360 add-in connects to the Aura Friday MCP-Link server, making Fusio
 - ✅ **Production ready** - Handles heavy loads without instability
 
 ### Python Execution + MCP Tool Integration
-**AI can now run arbitrary Python code directly inside Fusion 360** with full access to:
-- ✅ Entire Fusion 360 API (`adsk.core`, `adsk.fusion`, `adsk.cam`)
+**AI can now run arbitrary Python code directly inside Fusion** with full access to:
+- ✅ Entire Fusion API (`adsk.core`, `adsk.fusion`, `adsk.cam`)
 - ✅ All loaded add-ins (access your custom add-ins automatically!)
 - ✅ SQLite databases (store and query design data)
 - ✅ Browser automation (open documentation, extract data)
@@ -36,10 +36,10 @@ This Fusion 360 add-in connects to the Aura Friday MCP-Link server, making Fusio
 
 ## What This Is
 
-A Fusion 360 add-in that gives AI **unlimited access** to Fusion through three powerful capabilities:
+A Fusion add-in that gives AI **unlimited access** to Fusion through three powerful capabilities:
 
 ### 1. 🎯 Generic API Calls
-Execute any Fusion 360 API command without custom code:
+Execute any Fusion API command without custom code:
 ```python
 fusion360.execute({
   "api_path": "design.rootComponent.sketches.add",
@@ -91,7 +91,7 @@ Access 10+ built-in tools from Fusion:
 - ✅ Create parametric sketches with precise dimensions
 - ✅ Add text and extrude it to 3D
 - ✅ Generate mounting holes, brackets, mechanical parts
-- ✅ Execute any Fusion 360 API command
+- ✅ Execute any Fusion API command
 
 ### Advanced Workflows (NEW!)
 - 🔥 **Access your custom add-ins** - AI discovers and uses ANY loaded add-in
@@ -147,8 +147,8 @@ These tools ship with MCP-Link and work immediately. No configuration, no API ke
    git clone https://github.com/AuraFriday/Fusion-360-MCP-Server.git
    ```
 
-3. **Load as Fusion 360 Add-in**  
-   - Open Fusion 360
+3. **Load as Fusion Add-in**  
+   - Open Fusion
    - Press `Shift+S` to open Scripts and Add-Ins
    - Click the **Add-Ins** tab
    - Click the green **+** button next to "My Add-Ins"
@@ -158,7 +158,7 @@ These tools ship with MCP-Link and work immediately. No configuration, no API ke
 
 ### Configuration
 
-The add-in auto-connects to the MCP server on startup. Check the **TEXT COMMANDS** window in Fusion 360 to see connection logs.
+The add-in auto-connects to the MCP server on startup. Check the **TEXT COMMANDS** window in Fusion to see connection logs.
 
 ---
 
@@ -379,7 +379,7 @@ See [`AUTODESK_DEMO_AIRFOILTOOLS.md`](AUTODESK_DEMO_AIRFOILTOOLS.md) for the com
 ## 🔧 Technical Details
 
 ### Core Architecture
-- Built with Fusion 360's native Python API
+- Built with Fusion's native Python API
 - Uses Server-Sent Events (SSE) for MCP connection
 - JSON-RPC protocol for command execution
 - TRUE INLINE Python execution (no sandboxing)
@@ -389,7 +389,7 @@ See [`AUTODESK_DEMO_AIRFOILTOOLS.md`](AUTODESK_DEMO_AIRFOILTOOLS.md) for the com
 - Native messaging protocol for server discovery
 
 ### Thread Safety & Stability
-- **Main Thread Execution**: All Fusion 360 API calls execute on Fusion's main UI thread
+- **Main Thread Execution**: All Fusion API calls execute on Fusion's main UI thread
 - **Work Queue System**: Background threads queue work items for safe main thread processing
 - **Custom Event Handler**: Uses Fusion's `CustomEvent` system to safely trigger API calls
 - **Centralized Logging**: Thread-safe log buffer ensures reliable diagnostics from any thread
@@ -440,7 +440,7 @@ Proprietary - See LICENSE file for details
 ## 👤 Author
 
 Created by [AuraFriday](https://github.com/AuraFriday)  
-With 15,000+ users trusting previous Fusion 360 add-ins
+With 15,000+ users trusting previous Fusion add-ins
 
 ---
 
@@ -448,7 +448,7 @@ With 15,000+ users trusting previous Fusion 360 add-ins
 
 - **MCP-Link Server**: https://github.com/AuraFriday/mcp-link-server
 - **Model Context Protocol**: https://modelcontextprotocol.io
-- **Fusion 360 API**: https://help.autodesk.com/view/fusion360/ENU/?guid=GUID-A92A4B10-3781-4925-94C6-47DA85A4F65A
+- **Fusion API**: https://help.autodesk.com/view/fusion360/ENU/?guid=GUID-A92A4B10-3781-4925-94C6-47DA85A4F65A
 
 ---
 
@@ -482,7 +482,7 @@ A: Yes! The add-in is production-ready with robust error handling and stability 
 
 ## 🌟 Star This Project!
 
-If you find this useful, please star the repository and share with the Fusion 360 community!
+If you find this useful, please star the repository and share with the Fusion community!
 
 **Questions?** Open an issue or check the documentation in [`docs/`](docs/)
 

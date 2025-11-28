@@ -1,16 +1,16 @@
-# MCP-Link Fusion 360 - Quick Start Guide
+# MCP-Link Fusion - Quick Start Guide
 
 ## 🚀 Getting Started in 3 Steps
 
 ### Step 1: Enable TEXT COMMANDS Window
 ```
-Fusion 360 → View → Show Panel → Text Commands
+Fusion → View → Show Panel → Text Commands
 (or press Ctrl+Shift+C)
 ```
 
 ### Step 2: Load the Add-in
 ```
-Fusion 360 → Scripts and Add-Ins (Shift+S)
+Fusion → Scripts and Add-Ins (Shift+S)
 → Add-Ins tab
 → Click "+" and select MCP-Link-fusion-new folder
 → Select "MCP-Link" and click "Run"

@@ -1,21 +1,21 @@
 """
 File: mcp_client.py
-Project: MCP-Link Fusion 360 Add-in
+Project: MCP-Link Fusion Add-in
 Component: MCP client library (adapted from reverse_mcp.py)
 Author: Christopher Nathan Drake (cnd)
 Created: 2025-11-03
-Last Modified: 2025-11-03 by cnd (Integrated into Fusion 360 add-in)
+Last Modified: 2025-11-03 by cnd (Integrated into Fusion add-in)
 SPDX-License-Identifier: Proprietary
 Copyright: (c) 2025 Christopher Nathan Drake. All rights reserved.
 
-This module provides MCP client functionality for Fusion 360 add-ins.
+This module provides MCP client functionality for Fusion add-ins.
 It handles:
 - Native messaging discovery
 - SSE connection to MCP server
 - Remote tool registration
 - Reverse call handling
 
-Adapted from reverse_mcp.py for use within Fusion 360's Python environment.
+Adapted from reverse_mcp.py for use within Fusion's Python environment.
 """
 
 import os
@@ -678,7 +678,7 @@ class MCPClient:
             "properties": {
               "command": {
                 "type": "string",
-                "description": "The command to execute in Fusion 360"
+                "description": "The command to execute in Fusion"
               },
               "parameters": {
                 "type": "object",

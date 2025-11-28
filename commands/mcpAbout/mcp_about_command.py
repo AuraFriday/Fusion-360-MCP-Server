@@ -86,7 +86,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     thank_you_html = '''<div style="font-family: Arial, sans-serif; padding: 10px;">
 <h2 style="color: #0696D7;">Thank You for Using AuraFriday MCP Server!</h2>
 
-<p>This add-in enables <strong>AI-powered control</strong> of Fusion 360 through the Model Context Protocol (MCP).</p>
+<p>This add-in enables <strong>AI-powered control</strong> of Fusion through the Model Context Protocol (MCP).</p>
 
 <h3>🌟 Enjoying This Tool?</h3>
 <p>If you find this add-in helpful, please consider:</p>
@@ -104,7 +104,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
 <h3>🚀 What This Add-in Does:</h3>
 <ul>
-    <li>Connects Fusion 360 to your local MCP server</li>
+    <li>Connects Fusion to your local MCP server</li>
     <li>Enables AI assistants (like Claude, ChatGPT, etc.) to control Fusion</li>
     <li>Provides a generic API for data-driven CAD automation</li>
     <li>Supports Python execution with MCP tool integration</li>
@@ -119,7 +119,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 </ul>
 
 <p style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; color: #666;">
-<strong>Version:</strong> 1.2.55<br>
+<strong>Version:</strong> 1.2.72<br>
 <strong>Author:</strong> Christopher Nathan Drake<br>
 <strong>License:</strong> Proprietary<br>
 <strong>Website:</strong> <a href="https://www.aurafriday.com">www.aurafriday.com</a>

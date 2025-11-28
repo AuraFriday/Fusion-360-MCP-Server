@@ -1,8 +1,8 @@
 """
-MCP Bridge for Fusion 360 Python Execution
+MCP Bridge for Fusion Python Execution
 
 Provides mcp.call() function for calling other MCP tools from within
-Python code executed in Fusion 360 context.
+Python code executed in Fusion context.
 
 This module is injected into the execution environment of AI-written Python code,
 allowing it to call other MCP tools (SQLite, browser, user, etc.) seamlessly.

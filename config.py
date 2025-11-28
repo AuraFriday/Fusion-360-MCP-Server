@@ -33,4 +33,4 @@ sample_palette_id = f'{COMPANY_NAME}_{ADDIN_NAME}_palette_id'
 
 # MCP Configuration
 MCP_TOOL_NAME = 'fusion360'
-MCP_TOOL_DESCRIPTION = 'Autodesk Fusion 360 - AI-powered CAD/CAM/CAE software for product design and manufacturing'
+MCP_TOOL_DESCRIPTION = 'Autodesk Fusion - AI-powered CAD/CAM/CAE software for product design and manufacturing'

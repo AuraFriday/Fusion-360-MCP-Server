@@ -44,7 +44,7 @@ You have **5 comprehensive documents** ready:
 **Morning (2-3 hours):**
 
 1. **Take 7 Screenshots** (1 hour)
-   - Open Fusion 360 with MCP-Link running
+   - Open Fusion with MCP-Link running
    - Follow the list in `SUBMISSION_CHECKLIST.md` (Phase 1)
    - Use Windows Snipping Tool or macOS Screenshot
    - Save as PNG at 1920x1080
@@ -144,7 +144,7 @@ You have **5 comprehensive documents** ready:
 - Save as PNG
 - 1920x1080 resolution minimum
 
-**Pro tip:** Use Fusion 360's "Capture Image" feature (Camera icon) for clean viewport shots!
+**Pro tip:** Use Fusion's "Capture Image" feature (Camera icon) for clean viewport shots!
 
 ---
 
@@ -232,7 +232,7 @@ A: Yes! You can update screenshots, description, etc. anytime.
    - Option A: Today, 4-6 hours
    - Option B: Next 3 days, 2-3 hours each
 
-4. **Open Fusion 360 and start taking screenshots!**
+4. **Open Fusion and start taking screenshots!**
 
 ---
 
@@ -270,7 +270,7 @@ Everything is prepared. The hard work is done. Now it's just:
 - [ ] Read `APP_STORE_SUMMARY.md`
 - [ ] Choose Option A or Option B
 - [ ] Block time on calendar
-- [ ] Open Fusion 360
+- [ ] Open Fusion
 - [ ] Take first screenshot
 - [ ] Keep going until done!
 
@@ -278,7 +278,7 @@ Everything is prepared. The hard work is done. Now it's just:
 
 **Ready? Let's do this! 🚀**
 
-Open Fusion 360 and take your first screenshot right now. Seriously, do it!
+Open Fusion and take your first screenshot right now. Seriously, do it!
 
 ---
 
