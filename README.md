@@ -3,7 +3,7 @@
 
 **Control Fusion with AI !**
 
-This add-in for Autodesk Fusion connects to the Aura Friday MCP-Link server, making Fusion available as a remote tool that AI agents can control.
+This add-in for Autodesk Fusion connects to the Aura Friday MCP-Link server, making Fusion available as a remote tool that AI agents can control. [Official Store Link](https://apps.autodesk.com/FUSION/en/Detail/Index?id=7269770001970905100)
 
 [![Watch Demo](https://img.youtube.com/vi/0T2XU4tzudQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=0T2XU4tzudQ)
 
@@ -142,12 +142,17 @@ These tools ship with MCP-Link and work immediately. No configuration, no API ke
 1. **Download MCP-Link Server**  
    Get the latest release: https://github.com/AuraFriday/mcp-link-server/releases/tag/latest
 
-2. **Clone This Repository**  
+2. **Install the Add-In**
+   Official link: https://apps.autodesk.com/FUSION/en/Detail/Index?id=7269770001970905100
+
+### Optional manual install
+
+2b. **Clone This Repository**  
    ```bash
    git clone https://github.com/AuraFriday/Fusion-360-MCP-Server.git
    ```
 
-3. **Load as Fusion Add-in**  
+2c. **Load as Fusion Add-in**  
    - Open Fusion
    - Press `Shift+S` to open Scripts and Add-Ins
    - Click the **Add-Ins** tab
@@ -447,6 +452,7 @@ With 15,000+ users trusting previous Fusion add-ins
 ## 🔗 Links
 
 - **MCP-Link Server**: https://github.com/AuraFriday/mcp-link-server
+- **Offical Store Add-in**: https://apps.autodesk.com/FUSION/en/Detail/Index?id=7269770001970905100
 - **Model Context Protocol**: https://modelcontextprotocol.io
 - **Fusion API**: https://help.autodesk.com/view/fusion360/ENU/?guid=GUID-A92A4B10-3781-4925-94C6-47DA85A4F65A
 
