@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation</title>
+    <script type="text/javascript">
+      function openLink() {
+        var macOSLink = "https://apps.autodesk.com/FUSION/en/Detail/HelpDoc?appId=7269770001970905100&appLang=en&os=Mac";       // Replace with the actual Mac OS link
+        var windowsLink = "https://apps.autodesk.com/FUSION/en/Detail/HelpDoc?appId=7269770001970905100&appLang=en&os=Win64";   // Replace with the actual Windows link
+        var linuxLink = "LINUX_LINK";       // Replace with the actual Linux link
+        var linkToOpen;
+
+        if (navigator.platform.indexOf('Mac') !== -1) {
+          linkToOpen = macOSLink;
+        } else if (navigator.platform.indexOf('Win') !== -1) {
+          linkToOpen = windowsLink;
+        } else if (navigator.platform.indexOf('Linux') !== -1) {
+          linkToOpen = linuxLink;
+        } else {
+          linkToOpen = windowsLink;  // Default to Windows link if the OS is unrecognized
+        }
+
+        window.location.href = linkToOpen;
+      }
+    </script>
+  </head>
+  
+  <body>
+    <a class="header__logo-link" href="/en" aria-label="Autodesk App Store" title="Autodesk App Store"></a>
+    <p style="position: relative; top:100px;font-family: Aptos; font-size: 30px; text-align: center"> Autodesk App Store</p>
+    <p style="position: relative; top:100px;font-family: Aptos; font-size: 30px; text-align: center">
+      Click <a href="javascript:openLink();">here</a> for usage instructions
+    </p>
+    <p>&nbsp;</p>
+    <p style="position: relative; top:100px;font-family: Aptos; font-size: 15px; text-align: center"><strong>Note:</strong> Internet Connection is required.</p>
+  </body>
+</html>

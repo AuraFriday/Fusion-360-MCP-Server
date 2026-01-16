@@ -23,10 +23,12 @@ import sys
 import json
 import platform
 import ssl
+import struct
 import uuid
 import threading
 import time
 import queue
+import re
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Callable
 from urllib.parse import urljoin, urlparse, parse_qs
@@ -355,6 +357,84 @@ class MCPClient:
       self.log(f"Error reading manifest: {e}")
       return None
   
+  def _extract_mcp_servers_from_truncated_json(self, truncated_text: str) -> Optional[Dict[str, Any]]:
+    """
+    Attempt to extract the mcpServers section from truncated/incomplete JSON.
+    
+    When the native binary sends more data than we can receive (due to bugs like
+    16-bit length overflow), the JSON gets truncated. This function attempts to
+    extract just the mcpServers section which is all we need for connection.
+    
+    The JSON structure always starts like:
+    {
+      "mcpServers": {
+        "mypc": {
+          "url": "https://...",
+          "note": "...",
+          "headers": {
+            "Authorization": "Bearer xxx",
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      ...more stuff that may be truncated...
+    }
+    
+    Args:
+      truncated_text: The incomplete/truncated JSON text
+      
+    Returns:
+      A reconstructed minimal config dict with mcpServers, or None if extraction fails
+    """
+    self.log("[FALLBACK] Attempting to extract mcpServers from truncated JSON...")
+    
+    try:
+      # Strategy 1: Try to find and extract just the mcpServers section
+      # Look for the URL pattern first - this is the most critical piece
+      url_match = re.search(r'"url"\s*:\s*"(https?://[^"]+)"', truncated_text)
+      if not url_match:
+        self.log("[FALLBACK] Could not find URL in truncated JSON")
+        return None
+      
+      extracted_url = url_match.group(1)
+      self.log(f"[FALLBACK] Found URL: {extracted_url}")
+      
+      # Look for the Authorization header
+      auth_match = re.search(r'"Authorization"\s*:\s*"(Bearer\s+[^"]+)"', truncated_text)
+      if not auth_match:
+        self.log("[FALLBACK] Could not find Authorization header in truncated JSON")
+        return None
+      
+      extracted_auth = auth_match.group(1)
+      self.log(f"[FALLBACK] Found Authorization header: {extracted_auth[:20]}...")
+      
+      # Look for the server name (the key under mcpServers, usually "mypc" or hostname)
+      server_name_match = re.search(r'"mcpServers"\s*:\s*\{\s*"([^"]+)"', truncated_text)
+      server_name = server_name_match.group(1) if server_name_match else "extracted_server"
+      
+      # Reconstruct a minimal valid config with just what we need
+      reconstructed_config = {
+        "mcpServers": {
+          server_name: {
+            "url": extracted_url,
+            "headers": {
+              "Authorization": extracted_auth,
+              "Content-Type": "application/json"
+            }
+          }
+        },
+        "_extracted_from_truncated_json": True,
+        "_original_size_bytes": len(truncated_text)
+      }
+      
+      self.log(f"[FALLBACK] Successfully reconstructed config from truncated JSON!")
+      self.log(f"[FALLBACK] Extracted server: {server_name}")
+      return reconstructed_config
+      
+    except Exception as e:
+      self.log(f"[FALLBACK] Failed to extract from truncated JSON: {e}")
+      return None
+  
   def _discover_server_endpoint(self, manifest: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     Run the native binary to discover the server endpoint.
@@ -437,6 +517,7 @@ class MCPClient:
           return None
         
         # Step 3: Decode and parse the JSON
+        text = None
         try:
           text = json_bytes.decode('utf-8')
           self.log(f"[DEBUG] Successfully read {len(json_bytes)} bytes of JSON")
@@ -449,16 +530,23 @@ class MCPClient:
           self.log(f"[DEBUG] JSON preview: {text[:100]}...")
           try:
             json_data = json.loads(text)
-          except json.JSONDecodeError as e:
-            self.log(f"ERROR: Failed to parse JSON: {e}")
-            self.log(f"Output was: {text[:200]}")
+          except json.JSONDecodeError as json_parse_error:
+            self.log(f"WARN: Failed to parse JSON: {json_parse_error}")
+            self.log(f"Output was ({len(text)} bytes):\n{text}")
+            # Try to extract mcpServers from truncated JSON
+            json_data = self._extract_mcp_servers_from_truncated_json(text)
+            if not json_data:
+              proc.terminate()
+              return None
+        except json.JSONDecodeError as json_parse_error:
+          self.log(f"WARN: Failed to parse JSON: {json_parse_error}")
+          self.log(f"Output was ({len(text) if text else 0} bytes):\n{text if text else '(no text)'}")
+          # Try to extract mcpServers from truncated JSON
+          if text:
+            json_data = self._extract_mcp_servers_from_truncated_json(text)
+          if not json_data:
             proc.terminate()
             return None
-        except json.JSONDecodeError as e:
-          self.log(f"ERROR: Failed to parse JSON: {e}")
-          self.log(f"Output was: {text[:200]}")
-          proc.terminate()
-          return None
         
       finally:
         # Terminate the process (it's waiting for stdin)

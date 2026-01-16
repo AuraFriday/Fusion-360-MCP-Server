@@ -257,6 +257,53 @@ Save and reuse Python workflows:
 
 Scripts stored in: `<AuraFriday>/user_data/python_scripts/`
 
+## API Documentation & Best Practices
+
+### get_api_documentation - Search Fusion API (introspection)
+{
+  "operation": "get_api_documentation",
+  "search_term": "ExtrudeFeature",
+  "category": "class_name",    // class_name, member_name, description, or all
+  "max_results": 3
+}
+
+Use namespace prefixes when known: "fusion.Sketch", "core.Application.activeDocument"
+
+### get_online_documentation - Fetch Rich Docs (with samples!)
+{
+  "operation": "get_online_documentation",
+  "class_name": "ExtrudeFeatures",
+  "member_name": "createInput"   // Optional - omit for class-level docs
+}
+
+Fetches from Autodesk cloudhelp - includes:
+- Parameter tables with types
+- Return value descriptions
+- CODE SAMPLES (very useful!)
+
+### get_best_practices - Design Guidelines
+{
+  "operation": "get_best_practices"
+}
+
+Returns comprehensive Fusion 360 design best practices including:
+- Coordinate system (Y is UP!)
+- Body naming strategies
+- Construction plane techniques
+- PTransaction for atomic undo
+
+## Screenshots & Visual Verification
+
+For screenshots, use the `system` MCP tool - NOT Fusion API.
+Example: mcp.call('system', {'input': {'operation': 'screenshot', ...}})
+
+## Atomic Undo with PTransaction
+
+Wrap complex operations in a transaction for single-step undo:
+app.executeTextCommand('PTransaction.Start "My Operation"')
+# ... your operations ...
+app.executeTextCommand('PTransaction.Commit')
+
 ## Note
 
 Fusion 360 must be running with the MCP-Link add-in active.
@@ -377,6 +424,12 @@ The add-in maintains a session context for stored objects across multiple calls.
         return _handle_list_scripts(arguments)
       elif operation == 'delete_script':
         return _handle_delete_script(arguments)
+      elif operation == 'get_api_documentation':
+        return _handle_get_api_documentation(arguments)
+      elif operation == 'get_online_documentation':
+        return _handle_get_online_documentation(arguments)
+      elif operation == 'get_best_practices':
+        return _handle_get_best_practices(arguments)
       
       # Default: Generic API call (backward compatible - no operation specified)
       api_path = arguments.get('api_path', '')
@@ -988,6 +1041,397 @@ def _handle_delete_script(arguments: dict) -> dict:
   except Exception as e:
     return {
       "content": [{"type": "text", "text": f"ERROR deleting script: {str(e)}"}],
+      "isError": True
+    }
+
+
+def _handle_get_api_documentation(arguments: dict) -> dict:
+  """
+  Search the Fusion 360 API documentation.
+  
+  Introspects the live adsk module to find classes, properties, and methods.
+  Returns up to max_results matches with full docstrings and signatures.
+  """
+  import inspect
+  import re
+  from types import ModuleType, FunctionType
+  
+  search_term = arguments.get('search_term', '')
+  category = arguments.get('category', 'class_name')
+  max_results = arguments.get('max_results', 3)
+  
+  if not search_term:
+    return {
+      "content": [{"type": "text", "text": "ERROR: 'search_term' parameter required"}],
+      "isError": True
+    }
+  
+  try:
+    import adsk
+    import adsk.core
+    import adsk.fusion
+    
+    # Normalize search term
+    search_term_lower = search_term.lower()
+    
+    # Remove adsk. prefix if present
+    if search_term_lower.startswith('adsk.'):
+      search_term_lower = search_term_lower[5:]
+    
+    # Split namespace prefix if present
+    namespace_prefix = None
+    class_name_prefix = None
+    
+    if '.' in search_term_lower:
+      parts = search_term_lower.split('.', 1)
+      namespace_prefix = parts[0]
+      search_term_lower = parts[1]
+      
+      if '.' in search_term_lower:
+        parts = search_term_lower.split('.', 1)
+        class_name_prefix = parts[0]
+        search_term_lower = parts[1]
+    
+    # For class/member searches, only use first word
+    if category != 'description':
+      search_term_lower = search_term_lower.split()[0] if search_term_lower else ''
+    
+    exact_matches = []
+    partial_matches = []
+    
+    def get_short_description(member, member_name):
+      doc = member.__doc__
+      if doc:
+        first_sentence = doc[:doc.find('.')].strip() if '.' in doc else doc.strip()
+        return {"name": member_name, "doc": first_sentence[:200]}
+      return {"name": member_name, "doc": ""}
+    
+    def get_class_doc(class_obj, namespace_name):
+      result = {
+        "type": "class",
+        "name": class_obj.__name__,
+        "namespace": f"adsk.{namespace_name}",
+        "doc": class_obj.__doc__[:500] if class_obj.__doc__ else ""
+      }
+      properties = []
+      functions = []
+      for member_name, member in class_obj.__dict__.items():
+        if member_name.startswith("_") or member_name in ["thisown", "cast"]:
+          continue
+        if isinstance(member, property):
+          properties.append(get_short_description(member, member_name))
+        elif isinstance(member, FunctionType):
+          functions.append(get_short_description(member, member_name))
+      if properties:
+        result['properties'] = properties[:10]  # Limit for readability
+      if functions:
+        result['functions'] = functions[:10]
+      return result
+    
+    def get_property_doc(prop, prop_name, class_name, namespace_name):
+      result = {
+        "type": "property",
+        "name": prop_name,
+        "class": class_name,
+        "namespace": f"adsk.{namespace_name}",
+        "doc": prop.__doc__[:500] if prop.__doc__ else ""
+      }
+      if prop.fset is None:
+        result['readonly'] = True
+      return result
+    
+    def get_function_doc(func, class_name, namespace_name):
+      result = {
+        "type": "function",
+        "name": func.__name__,
+        "class": class_name,
+        "namespace": f"adsk.{namespace_name}",
+        "doc": func.__doc__[:500] if func.__doc__ else ""
+      }
+      try:
+        sig_str = str(inspect.signature(func))
+        # Clean up signature
+        sig_str = sig_str.replace("(self, ", "(").replace("(self)", "()")
+        sig_str = sig_str.replace("'", "").replace("::", ".")
+        sig_str = re.sub(r'adsk\.core\.Ptr<([^>]+)>', r'\1', sig_str)
+        result['signature'] = sig_str
+      except:
+        pass
+      return result
+    
+    # Search through adsk namespaces
+    for namespace_name, namespace in adsk.__dict__.items():
+      if namespace_name.startswith("_") or not isinstance(namespace, ModuleType):
+        continue
+      if namespace_prefix and namespace_prefix != namespace_name.lower():
+        continue
+      
+      for class_name, class_obj in namespace.__dict__.items():
+        if class_name.startswith("_") or not isinstance(class_obj, type):
+          continue
+        class_name_lower = class_name.lower()
+        if class_name_prefix and class_name_prefix != class_name_lower:
+          continue
+        
+        # Search by class name
+        if category in ['class_name', 'all']:
+          if search_term_lower == class_name_lower:
+            exact_matches.append(('class', namespace_name, class_obj, None))
+          elif search_term_lower in class_name_lower:
+            partial_matches.append(('class', namespace_name, class_obj, None))
+        
+        # Search by description
+        if category in ['description', 'all']:
+          class_doc = (class_obj.__doc__ or "").lower()
+          if search_term_lower in class_doc:
+            partial_matches.append(('class', namespace_name, class_obj, None))
+        
+        # Search members
+        if category in ['member_name', 'description', 'all']:
+          for member_name, member_obj in class_obj.__dict__.items():
+            if member_name.startswith("_") or member_name in ["thisown", "cast"]:
+              continue
+            if not isinstance(member_obj, (property, FunctionType)):
+              continue
+            
+            member_name_lower = member_name.lower()
+            
+            if category in ['member_name', 'all']:
+              if search_term_lower == member_name_lower:
+                exact_matches.append(('member', namespace_name, class_obj, member_obj))
+              elif search_term_lower in member_name_lower:
+                partial_matches.append(('member', namespace_name, class_obj, member_obj))
+            
+            if category in ['description', 'all']:
+              member_doc = (member_obj.__doc__ or "").lower()
+              if search_term_lower in member_doc:
+                partial_matches.append(('member', namespace_name, class_obj, member_obj))
+        
+        if len(exact_matches) >= max_results:
+          break
+      if len(exact_matches) >= max_results:
+        break
+    
+    # Build results
+    results = []
+    for match_type, namespace_name, class_obj, member_obj in (exact_matches + partial_matches)[:max_results]:
+      if match_type == 'class':
+        results.append(get_class_doc(class_obj, namespace_name))
+      else:
+        class_name = class_obj.__name__
+        if isinstance(member_obj, property):
+          # Find property name
+          prop_name = None
+          for name, member in class_obj.__dict__.items():
+            if member is member_obj:
+              prop_name = name
+              break
+          results.append(get_property_doc(member_obj, prop_name or "unknown", class_name, namespace_name))
+        elif isinstance(member_obj, FunctionType):
+          results.append(get_function_doc(member_obj, class_name, namespace_name))
+    
+    if not results:
+      return {
+        "content": [{"type": "text", "text": f"No results found for '{search_term}' in category '{category}'"}],
+        "isError": False
+      }
+    
+    return {
+      "content": [{"type": "text", "text": json.dumps(results, indent=2)}],
+      "isError": False
+    }
+    
+  except Exception as e:
+    import traceback
+    return {
+      "content": [{"type": "text", "text": f"ERROR searching documentation: {str(e)}\n{traceback.format_exc()}"}],
+      "isError": True
+    }
+
+
+def _handle_get_online_documentation(arguments: dict) -> dict:
+  """
+  Fetch rich API documentation from Autodesk's cloudhelp pages.
+  
+  The cloudhelp URLs are predictably structured:
+  - Class: ClassName.htm
+  - Method/Property: ClassName_memberName.htm
+  
+  This provides richer docs than introspection: parameter tables, return types,
+  and CODE SAMPLES.
+  """
+  import urllib.request
+  import urllib.error
+  import re
+  
+  class_name = arguments.get('class_name', '')
+  member_name = arguments.get('member_name', '')
+  
+  if not class_name:
+    return {
+      "content": [{"type": "text", "text": "ERROR: 'class_name' parameter required"}],
+      "isError": True
+    }
+  
+  # Build the cloudhelp URL
+  base_url = "https://help.autodesk.com/cloudhelp/ENU/Fusion-360-API/files"
+  
+  if member_name:
+    filename = f"{class_name}_{member_name}.htm"
+  else:
+    filename = f"{class_name}.htm"
+  
+  url = f"{base_url}/{filename}"
+  
+  try:
+    # Fetch the page
+    request = urllib.request.Request(url, headers={'User-Agent': 'Fusion360-MCP/1.0'})
+    with urllib.request.urlopen(request, timeout=10) as response:
+      html = response.read().decode('utf-8')
+    
+    # Parse out the useful content (simple extraction)
+    result = {
+      "url": url,
+      "class_name": class_name,
+      "member_name": member_name if member_name else None
+    }
+    
+    # Extract description (first h1 content and following text)
+    desc_match = re.search(r'<h2[^>]*>\s*Description\s*</h2>\s*<p>(.*?)</p>', html, re.DOTALL | re.IGNORECASE)
+    if desc_match:
+      description = re.sub(r'<[^>]+>', '', desc_match.group(1)).strip()
+      result["description"] = description
+    
+    # Extract parameters table
+    params_section = re.search(r'<h2[^>]*>\s*Parameters\s*</h2>(.*?)<h2', html, re.DOTALL | re.IGNORECASE)
+    if params_section:
+      params = []
+      # Find table rows
+      rows = re.findall(r'<tr[^>]*>(.*?)</tr>', params_section.group(1), re.DOTALL)
+      for row in rows[1:]:  # Skip header row
+        cells = re.findall(r'<td[^>]*>(.*?)</td>', row, re.DOTALL)
+        if len(cells) >= 3:
+          param = {
+            "name": re.sub(r'<[^>]+>', '', cells[0]).strip(),
+            "type": re.sub(r'<[^>]+>', '', cells[1]).strip(),
+            "description": re.sub(r'<[^>]+>', '', cells[2]).strip()
+          }
+          params.append(param)
+      if params:
+        result["parameters"] = params
+    
+    # Extract return value
+    return_match = re.search(r'<h2[^>]*>\s*Return Value\s*</h2>(.*?)<h2', html, re.DOTALL | re.IGNORECASE)
+    if return_match:
+      return_section = return_match.group(1)
+      # Find type and description from table
+      rows = re.findall(r'<tr[^>]*>(.*?)</tr>', return_section, re.DOTALL)
+      for row in rows[1:]:
+        cells = re.findall(r'<td[^>]*>(.*?)</td>', row, re.DOTALL)
+        if len(cells) >= 2:
+          result["return_type"] = re.sub(r'<[^>]+>', '', cells[0]).strip()
+          result["return_description"] = re.sub(r'<[^>]+>', '', cells[1]).strip()
+          break
+    
+    # Extract code samples section
+    samples_match = re.search(r'<h2[^>]*>\s*Samples\s*</h2>(.*?)(?:<h2|$)', html, re.DOTALL | re.IGNORECASE)
+    if samples_match:
+      sample_links = []
+      # Find sample names and descriptions
+      rows = re.findall(r'<tr[^>]*>(.*?)</tr>', samples_match.group(1), re.DOTALL)
+      for row in rows[1:]:
+        cells = re.findall(r'<td[^>]*>(.*?)</td>', row, re.DOTALL)
+        if len(cells) >= 2:
+          # Extract link href
+          link_match = re.search(r'href="([^"]+)"', cells[0])
+          sample_name = re.sub(r'<[^>]+>', '', cells[0]).strip()
+          sample_desc = re.sub(r'<[^>]+>', '', cells[1]).strip()
+          sample = {"name": sample_name, "description": sample_desc}
+          if link_match:
+            sample["url"] = f"{base_url}/{link_match.group(1)}"
+          sample_links.append(sample)
+      if sample_links:
+        result["samples"] = sample_links
+    
+    # Extract Python syntax if available
+    syntax_match = re.search(r'returnValue\s*=\s*\w+\.<strong>(\w+)</strong>\((.*?)\)', html)
+    if syntax_match:
+      result["syntax"] = f"{syntax_match.group(1)}({syntax_match.group(2)})"
+    
+    return {
+      "content": [{"type": "text", "text": json.dumps(result, indent=2)}],
+      "isError": False
+    }
+    
+  except urllib.error.HTTPError as e:
+    if e.code == 404:
+      # Try alternative URL patterns
+      alternatives = []
+      if not member_name:
+        # Maybe it's plural/singular issue
+        if class_name.endswith('s'):
+          alternatives.append(f"{class_name[:-1]}.htm")
+        else:
+          alternatives.append(f"{class_name}s.htm")
+      
+      return {
+        "content": [{"type": "text", "text": json.dumps({
+          "error": f"Page not found: {url}",
+          "suggestion": "Try different class/member name spelling",
+          "alternatives_to_try": alternatives,
+          "fallback": "Use get_api_documentation with introspection instead"
+        }, indent=2)}],
+        "isError": True
+      }
+    else:
+      return {
+        "content": [{"type": "text", "text": f"HTTP Error {e.code}: {str(e)}"}],
+        "isError": True
+      }
+  except Exception as e:
+    import traceback
+    return {
+      "content": [{"type": "text", "text": f"ERROR fetching documentation: {str(e)}\n{traceback.format_exc()}"}],
+      "isError": True
+    }
+
+
+def _handle_get_best_practices(arguments: dict) -> dict:
+  """
+  Return the Fusion 360 best practices guide.
+  
+  Reads and returns the best_practices.md file from the add-in directory.
+  """
+  try:
+    # Get add-in directory
+    addin_dir = os.path.dirname(os.path.abspath(__file__))
+    best_practices_file = os.path.join(addin_dir, "best_practices.md")
+    
+    if not os.path.exists(best_practices_file):
+      return {
+        "content": [{"type": "text", "text": f"ERROR: best_practices.md not found at {best_practices_file}"}],
+        "isError": True
+      }
+    
+    with open(best_practices_file, 'r', encoding='utf-8') as f:
+      content = f.read()
+    
+    # Add header
+    text = "🎯 **FUSION 360 DESIGN BEST PRACTICES**\n\n"
+    text += f"📄 **Length**: {len(content.splitlines())} lines\n\n"
+    text += "---\n\n"
+    text += content
+    text += "\n\n---\n"
+    text += "✅ Keep these best practices in mind when designing in Fusion 360!"
+    
+    return {
+      "content": [{"type": "text", "text": text}],
+      "isError": False
+    }
+    
+  except Exception as e:
+    return {
+      "content": [{"type": "text", "text": f"ERROR reading best practices: {str(e)}"}],
       "isError": True
     }
 

@@ -13,7 +13,13 @@ This add-in for Autodesk Fusion connects to the Aura Friday MCP-Link server, mak
 
 ## 🚀 What's New
 
-### Latest: Thread-Safe Architecture (November 2025)
+### Latest: Multi-Source Documentation + Auto-Updates (January 2026)
+- 🔥 **Triple documentation sources** - Introspection + Online docs + Best practices
+- 🔥 **Rich API docs with samples** - Fetch from Autodesk's cloudhelp with code examples
+- 🔥 **Automatic updates** - Secure, signature-verified updates without reinstalling
+- 🔥 **Best practices guide** - Built-in design guidelines for AI
+
+### Thread-Safe Architecture (November 2025)
 - ✅ **Rock-solid stability** - All Fusion API calls now execute on main thread
 - ✅ **Zero crashes** - Work queue system prevents threading issues
 - ✅ **Centralized logging** - Thread-safe diagnostics from all components
@@ -83,6 +89,36 @@ Access 10+ built-in tools from Fusion:
 - Desktop automation
 - And more!
 
+### 4. 📚 Multi-Source Documentation (NEW!)
+AI has access to three complementary documentation sources:
+
+**Quick Search (Introspection)**:
+```python
+fusion360.execute({
+  "operation": "get_api_documentation",
+  "search_term": "ExtrudeFeature",
+  "category": "class_name"
+})
+```
+
+**Rich Docs with Samples (Online)**:
+```python
+fusion360.execute({
+  "operation": "get_online_documentation",
+  "class_name": "ExtrudeFeatures",
+  "member_name": "createInput"
+})
+# Returns: parameter tables, return types, and 8+ working code samples!
+```
+
+**Best Practices Guide**:
+```python
+fusion360.execute({
+  "operation": "get_best_practices"
+})
+# Returns: coordinate systems, body naming, PTransaction patterns, etc.
+```
+
 ---
 
 ## 🎯 What AI Can Do
@@ -100,6 +136,8 @@ Access 10+ built-in tools from Fusion:
 - 🔥 **Show results** - Display popups with charts, tables, forms
 - 🔥 **Automate workflows** - Combine Fusion + database + browser + AI
 - 🔥 **Call AI models** - Get design suggestions from 500+ models
+- 🔥 **Rich documentation** - Access Autodesk's official docs with code samples
+- 🔥 **Auto-updates** - Get new features without reinstalling
 
 ### Real-World Example
 ```python
@@ -169,7 +207,32 @@ The add-in auto-connects to the MCP server on startup. Check the **TEXT COMMANDS
 
 ## 🎬 Quick Start Examples
 
-### Example 1: Simple Sketch (Generic API)
+### Example 1: Get API Documentation (NEW!)
+```python
+# Quick search by class name
+fusion360.execute({
+  "operation": "get_api_documentation",
+  "search_term": "Sketch",
+  "category": "class_name",
+  "max_results": 3
+})
+
+# Get rich docs with code samples
+fusion360.execute({
+  "operation": "get_online_documentation",
+  "class_name": "ExtrudeFeatures",
+  "member_name": "createInput"
+})
+# Returns: Full parameter descriptions, return types, and 8 working examples!
+
+# Get best practices guide
+fusion360.execute({
+  "operation": "get_best_practices"
+})
+# Returns: Coordinate systems, body naming, construction planes, PTransaction patterns
+```
+
+### Example 2: Simple Sketch (Generic API)
 ```python
 # Create a sketch
 fusion360.execute({
@@ -188,7 +251,7 @@ fusion360.execute({
 })
 ```
 
-### Example 2: Python with Database (NEW!)
+### Example 3: Python with Database (NEW!)
 ```python
 fusion360.execute({
   "operation": "execute_python",
@@ -223,7 +286,7 @@ print(f'Created {sketch.name} with 4 mounting holes')
 })
 ```
 
-### Example 3: Access Custom Add-ins (NEW!)
+### Example 4: Access Custom Add-ins (NEW!)
 ```python
 fusion360.execute({
   "operation": "execute_python",
@@ -282,6 +345,8 @@ if 'AirfoilTools' in str(addins):
 - **Enhanced Reporting** - Provides detailed success/error information
 - **Thread-Safe Proxy** (NEW!) - Ensures all Fusion API calls happen on main thread
 - **Centralized Logger** (NEW!) - Thread-safe logging from any component
+- **Documentation System** (NEW!) - Three-tier docs: introspection, online, best practices
+- **Auto-Updater** (NEW!) - Secure, signature-verified automatic updates
 
 ---
 
@@ -322,6 +387,76 @@ if 'AirfoilTools' in str(addins):
 "tool_name": "sqlite"                            # Tool to call
 "arguments": {"input": {...}}                    # Tool arguments
 ```
+
+### Documentation Operations (NEW!)
+```python
+"operation": "get_api_documentation"             # Search API by introspection
+"search_term": "ExtrudeFeature"                  # What to search for
+"category": "class_name"                         # class_name, member_name, description, all
+"max_results": 3                                 # Limit results
+
+"operation": "get_online_documentation"          # Fetch rich docs from Autodesk
+"class_name": "ExtrudeFeatures"                  # Required: class name
+"member_name": "createInput"                     # Optional: method/property name
+
+"operation": "get_best_practices"                # Get design guidelines
+```
+
+---
+
+## 🎨 Advanced Capabilities
+
+### Electronics Design
+Fusion 360 includes **complete electronics design capabilities** accessible via API:
+
+**Workspaces Available**:
+- ✅ Schematic Editor - Circuit schematic capture
+- ✅ PCB Editor - PCB layout with auto-routing
+- ✅ 3D PCB - Visualize PCB in mechanical context
+- ✅ Symbol/Footprint editors - Create custom components
+
+**Use Cases**:
+- Design PCBs and mechanical enclosures together
+- 3D visualization of PCB in product design
+- Export Gerber files for manufacturing
+- Component library management
+
+### CAM/Manufacturing
+Full manufacturing capabilities with **280+ CAM classes**:
+
+**Capabilities**:
+- 2D/3D milling toolpaths
+- Turning operations (lathe)
+- Additive manufacturing (3D printing)
+- Post-processing for CNC machines
+- Toolpath simulation
+
+**Module**: `adsk.cam` fully accessible via Python
+
+### McMaster-Carr Integration
+Direct access to **500,000+ industrial components**:
+
+**Command**: `InsertMcMasterCarrComponentCommand`
+
+**Categories**:
+- Bearings, fasteners, gears, motors
+- Pneumatics, hydraulics, electronics
+- Raw materials, tools, safety equipment
+
+**Limitation**: Opens interactive dialog (user must select part)
+
+### Simulation & Analysis
+- Static stress analysis
+- Modal analysis (vibration)
+- Thermal analysis
+- Shape optimization
+- Event simulation (drop tests)
+
+### Generative Design
+- AI-driven design exploration
+- Hundreds of design alternatives
+- Optimization for weight, strength, manufacturing
+- Cloud-based computation
 
 ---
 
@@ -400,6 +535,21 @@ See [`AUTODESK_DEMO_AIRFOILTOOLS.md`](AUTODESK_DEMO_AIRFOILTOOLS.md) for the com
 - **Centralized Logging**: Thread-safe log buffer ensures reliable diagnostics from any thread
 - **Crash Prevention**: Robust architecture prevents crashes even under heavy load
 
+### Documentation System (NEW!)
+- **Three-Tier Approach**: Introspection → Online docs → Best practices
+- **Introspection**: Live API search using Python's `inspect` module
+- **Online Docs**: Fetches from Autodesk's cloudhelp with predictable URLs
+- **Best Practices**: Built-in guide covering coordinate systems, body naming, PTransaction patterns
+- **Rich Content**: Parameter tables, return types, and working code samples
+
+### Auto-Update System (NEW!)
+- **Secure Updates**: RSA signature verification ensures authenticity
+- **Static Loader**: Minimal stub that never updates itself
+- **Safe Overwrites**: Updates applied before modules load
+- **Background Downloads**: Non-blocking update checks
+- **Version Tracking**: `VERSION.txt` for reliable version comparison
+- **Platform-Specific**: Separate packages for Windows/Mac
+
 ---
 
 ## ⚠️ Limitations
@@ -413,13 +563,15 @@ See [`AUTODESK_DEMO_AIRFOILTOOLS.md`](AUTODESK_DEMO_AIRFOILTOOLS.md) for the com
 
 ## 🚀 Future Enhancements
 
-- Semantic search integration for auto-documentation
+- ~~Semantic search integration for auto-documentation~~ ✅ **DONE** (Multi-source docs)
+- ~~Auto-update system~~ ✅ **DONE** (Secure signature-verified updates)
 - Batch operation optimization
-- Undo/redo helpers
 - Extended enum handling
 - More intuitive object construction patterns
 - Script library for common operations
 - Visual workflow builder
+- Electronics design automation (PCB layout, schematic capture)
+- CAM toolpath generation via AI
 
 ---
 
@@ -483,6 +635,18 @@ A: Very stable! Thread-safe architecture ensures all API calls happen on main th
 
 **Q: Can I use this in production?**  
 A: Yes! The add-in is production-ready with robust error handling and stability features.
+
+**Q: How do updates work?**  
+A: Automatic! The add-in checks for updates in the background and applies them on next restart. All updates are cryptographically signed for security.
+
+**Q: Can AI access Fusion's documentation?**  
+A: Yes! Three ways: (1) Live API introspection, (2) Autodesk's official cloudhelp docs with code samples, (3) Built-in best practices guide.
+
+**Q: Does this work with electronics design?**  
+A: Yes! Full access to PCB design, schematic capture, 3D PCB visualization, and component libraries.
+
+**Q: Can I use this for manufacturing (CAM)?**  
+A: Yes! The `adsk.cam` module provides 280+ classes for milling, turning, additive manufacturing, and toolpath generation.
 
 ---
 
