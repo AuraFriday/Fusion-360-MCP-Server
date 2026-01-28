@@ -119,7 +119,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 </ul>
 
 <p style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; color: #666;">
-<strong>Version:</strong> 1.2.72<br>
+<strong>Version:</strong> 1.2.73<br>
 <strong>Author:</strong> Christopher Nathan Drake<br>
 <strong>License:</strong> Proprietary<br>
 <strong>Website:</strong> <a href="https://www.aurafriday.com">www.aurafriday.com</a>

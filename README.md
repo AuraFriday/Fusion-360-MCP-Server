@@ -13,11 +13,13 @@ This add-in for Autodesk Fusion connects to the Aura Friday MCP-Link server, mak
 
 ## 🚀 What's New
 
-### Latest: Multi-Source Documentation + Auto-Updates (January 2026)
+### Latest: Enhanced Python Integration (January 2026)
+- 🔥 **Pre-injected shortcuts** - `app`, `ui`, `design`, `rootComponent` available immediately in Python
+- 🔥 **Cross-operation context** - Access objects stored via `store_as` from Python using `fusion_context`
+- 🔥 **ValueInput support** - Generic API now constructs ValueInput objects automatically
 - 🔥 **Triple documentation sources** - Introspection + Online docs + Best practices
 - 🔥 **Rich API docs with samples** - Fetch from Autodesk's cloudhelp with code examples
 - 🔥 **Automatic updates** - Secure, signature-verified updates without reinstalling
-- 🔥 **Best practices guide** - Built-in design guidelines for AI
 
 ### Thread-Safe Architecture (November 2025)
 - ✅ **Rock-solid stability** - All Fusion API calls now execute on main thread
@@ -363,6 +365,10 @@ if 'AirfoilTools' in str(addins):
 ### Object Construction
 ```python
 {"type": "Point3D", "x": 5, "y": 10, "z": 0}    # Construct from dict
+{"type": "Vector3D", "x": 1, "y": 0, "z": 0}    # 3D vector
+{"type": "ValueInput", "value": 2.5}            # Real value (cm)
+{"type": "ValueInput", "expression": "2.5 cm"}  # String expression
+{"type": "ObjectCollection"}                     # Empty collection
 "$my_sketch.originPoint"                         # Reference stored object
 0                                                 # Enum as integer
 ```
@@ -373,12 +379,20 @@ if 'AirfoilTools' in str(addins):
 "$my_object.someMethod"                          # Use in next command
 ```
 
-### Python Execution (NEW!)
+### Python Execution
 ```python
 "operation": "execute_python"                    # Run Python code
 "code": "import adsk.core\n..."                  # Python code string
 "session_id": "my_session"                       # Persistent session
 "persistent": true                               # Variables persist
+
+# Pre-injected variables available in your code:
+# - app          : adsk.core.Application.get()
+# - ui           : app.userInterface
+# - design       : Active design (if document open)
+# - rootComponent: design.rootComponent (if document open)
+# - fusion_context: Dict of objects stored via store_as
+# - mcp          : MCP bridge for calling other tools
 ```
 
 ### MCP Tool Calling (NEW!)

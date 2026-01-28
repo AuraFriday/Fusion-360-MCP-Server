@@ -52,7 +52,7 @@ def get_current_version(addin_dir: str) -> str:
     addin_dir: Path to add-in directory
     
   Returns:
-    Version string (e.g., "1.2.72") or "0.0.0" if not found
+    Version string (e.g., "1.2.73") or "0.0.0" if not found
   """
   version_file = os.path.join(addin_dir, "VERSION.txt")
   try:
